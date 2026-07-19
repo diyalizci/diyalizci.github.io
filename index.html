@@ -1,1533 +1,1082 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Hasta Takip Formu - UZMAN / TAKİP (Koltuk + JSON + Sıralama + Geri Al)</title>
-  <style>
-    :root{
-      --bg:#0b1220;
-      --txt:#e9eefc;
-      --muted:#a9b6d6;
-      --p:#5b8cff;
-      --p2:#2ee59d;
-      --danger:#ff5b6e;
-      --border:rgba(255,255,255,.10);
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius:16px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: var(--sans);
-      background: radial-gradient(1200px 600px at 20% 0%, rgba(91,140,255,.22), transparent 55%),
-                  radial-gradient(900px 500px at 90% 20%, rgba(46,229,157,.18), transparent 55%),
-                  var(--bg);
-      color:var(--txt);
-      min-height:100vh;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diyaliz Hasta Gözlem Sistemi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #0f1625;
+    --surface2: #161e30;
+    --surface3: #1c2640;
+    --border: #1e2d4a;
+    --border-light: #2a3d5c;
+    --accent: #00c9ff;
+    --accent-dim: #0099cc44;
+    --accent2: #00e5aa;
+    --accent2-dim: #00e5aa22;
+    --warn: #ff6b35;
+    --text: #c8d8f0;
+    --text-dim: #6a85a8;
+    --text-muted: #3d5070;
+    --green: #00e5aa;
+    --green-dim: #00e5aa18;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
 
-    /* Shell layout */
-    .shell{ display:flex; min-height:100vh; }
-    .side{
-      width: 230px;
-      border-right:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      padding:18px 14px;
-      position:sticky;
-      top:0;
-      height:100vh;
-    }
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      padding:10px 10px 14px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.12);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      margin-bottom:12px;
-    }
-    .brand .t{ font-weight:750; letter-spacing:.2px; }
-    .brand .s{ color:var(--muted); font-size:12px; }
-    .nav{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-top:10px;
-    }
-    .navBtn{
-      width:100%;
-      text-align:left;
-      border:1px solid transparent;
-      background: rgba(255,255,255,.04);
-      color:var(--txt);
-      padding:12px 12px;
-      border-radius: 14px;
-      cursor:pointer;
-      font-size:14px;
-      transition:.15s ease;
-      user-select:none;
-    }
-    .navBtn:hover{ background: rgba(255,255,255,.07); }
-    .navBtn.active{
-      background: rgba(91,140,255,.18);
-      border-color: rgba(91,140,255,.35);
-    }
-    .sideSmall{
-      margin-top:12px;
-      color:rgba(255,255,255,.55);
-      font-size:12px;
-      font-family:var(--mono);
-      line-height:1.35;
-    }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    .main{ flex:1; padding: 22px; }
-    .app{ max-width:1200px; margin:0 auto; }
-    header{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:14px;
-    }
-    .title{ display:flex; flex-direction:column; gap:6px; }
-    .title h1{ margin:0; font-size:22px; letter-spacing:.2px; }
-    .title .sub{ color:var(--muted); font-size:13px; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-    .tabs{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      padding:10px;
-      background: rgba(255,255,255,.04);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      margin-bottom:16px;
-    }
-    .tab{
-      border:1px solid transparent;
-      background: rgba(255,255,255,.04);
-      color:var(--txt);
-      padding:10px 12px;
-      border-radius: 999px;
-      cursor:pointer;
-      font-size:13px;
-      transition: .15s ease;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .tab:hover{ background: rgba(255,255,255,.07); }
-    .tab.active{
-      background: rgba(91,140,255,.18);
-      border-color: rgba(91,140,255,.35);
-    }
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-    .panel{
-      background: rgba(255,255,255,.04);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
 
-    .toolbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:14px;
-      border-bottom:1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      flex-wrap:wrap;
-    }
-    .leftTools, .rightTools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .field{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      padding:8px 10px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.14);
-      border-radius: 999px;
-    }
-    .field input{
-      border:none;
-      outline:none;
-      background: transparent;
-      color: var(--txt);
-      font-size: 13px;
-    }
-    .field input.nameIn{ min-width: 220px; }
-    .field input.seatIn{ width: 120px; }
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
 
-    .btn{
-      border:none;
-      cursor:pointer;
-      padding:10px 12px;
-      border-radius: 12px;
-      font-size: 13px;
-      color: var(--txt);
-      background: rgba(255,255,255,.06);
-      border:1px solid var(--border);
-      transition:.15s ease;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .btn:hover{ background: rgba(255,255,255,.09); }
-    .btn.primary{
-      background: rgba(91,140,255,.20);
-      border-color: rgba(91,140,255,.35);
-    }
-    .btn.primary:hover{ background: rgba(91,140,255,.26); }
-    .btn.danger{
-      background: rgba(255,91,110,.14);
-      border-color: rgba(255,91,110,.30);
-    }
-    .btn.danger:hover{ background: rgba(255,91,110,.20); }
-    .btn.success{
-      background: rgba(46,229,157,.14);
-      border-color: rgba(46,229,157,.30);
-    }
-    .btn.success:hover{ background: rgba(46,229,157,.20); }
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
 
-    textarea{
-      width:100%;
-      height: 100%;
-      min-height: 58px;
-      resize: vertical;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.14);
-      color: var(--txt);
-      padding:10px 10px;
-      font-size: 13px;
-      outline:none;
-    }
-    textarea:focus{
-      border-color: rgba(91,140,255,.45);
-      box-shadow: 0 0 0 3px rgba(91,140,255,.14);
-    }
+  .header-text h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
 
-    .empty{ padding:22px 14px; color: var(--muted); font-size: 13px; }
+  .header-text p {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
 
-    /* TAKİP table */
-    .gridHeader{
-      display:grid;
-      grid-template-columns: 110px 290px 1fr 42px;
-      gap:0;
-      padding:12px 14px;
-      color: var(--muted);
-      font-size:12px;
-      border-bottom:1px solid var(--border);
-      background: rgba(0,0,0,.12);
-    }
-    .rows{ max-height: 68vh; overflow:auto; }
-    .row{
-      display:grid;
-      grid-template-columns: 110px 290px 1fr 42px;
-      gap:0;
-      border-bottom:1px solid var(--border);
-      padding:10px 14px;
-      align-items:stretch;
-      background: rgba(255,255,255,.02);
-    }
-    .row:nth-child(2n){ background: rgba(255,255,255,.035); }
+  .header-date {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: right;
+  }
 
-    .seatCell{
-      display:flex; flex-direction:column; gap:6px; padding-right:10px;
-      color: var(--muted); font-family: var(--mono); font-size: 12px;
-    }
-    .seatBadge{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:6px 8px;
-      border-radius: 10px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.10);
-      color: var(--txt);
-      font-size: 12px;
-      width: fit-content;
-      cursor:pointer;
-      user-select:none;
-    }
-    .seatHint{ font-size: 11px; color: var(--muted); }
+  /* Top Action Bar */
+  .action-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 20px;
+  }
 
-    .nameCell{ display:flex; flex-direction:column; gap:8px; padding-right:12px; }
-    .nameTop{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .name{
-      font-weight:650;
-      font-size: 13px;
-      line-height: 1.2;
-      cursor:pointer;
-      padding:6px 8px;
-      border-radius: 10px;
-      background: rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-    }
-    .name:hover{ background: rgba(255,255,255,.06); }
-    .hint{ color: var(--muted); font-size: 11px; }
+  .search-wrap {
+    flex: 1;
+    min-width: 180px;
+    position: relative;
+  }
 
-    .iconBtn{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.14);
-      cursor:pointer;
-      transition:.15s ease;
-      height: 100%;
-      min-height: 58px;
-    }
-    .iconBtn:hover{
-      background: rgba(255,91,110,.12);
-      border-color: rgba(255,91,110,.30);
-    }
-    .trash{ width:18px; height:18px; opacity:.9; fill: var(--danger); }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px 9px 36px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
 
-    /* UZMAN split */
-    .split{ display:flex; min-height: 68vh; }
-    .splitLeft{
-      width: 42%;
-      border-right:1px solid var(--border);
-      background: rgba(0,0,0,.10);
-      padding:14px;
-      overflow:auto;
-    }
-    .splitRight{ width: 58%; padding:14px; overflow:auto; }
-    .listItem{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-      border-radius: 14px;
-      cursor:pointer;
-      margin-bottom:10px;
-      transition:.15s ease;
-    }
-    .listItem:hover{ background: rgba(255,255,255,.05); }
-    .listItem.active{
-      background: rgba(91,140,255,.16);
-      border-color: rgba(91,140,255,.35);
-    }
-    .pill{
-      font-size: 11px;
-      color: var(--muted);
-      border:1px solid rgba(255,255,255,.10);
-      padding:4px 8px;
-      border-radius: 999px;
-      background: rgba(0,0,0,.10);
-      user-select:none;
-      white-space:nowrap;
-    }
-    .uzmanMeta{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-      align-items:center;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .readonly{
-      width:100%;
-      padding:10px 10px;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.14);
-      color: var(--txt);
-      font-size: 13px;
-      outline:none;
-    }
-    .emailPreview{
-      margin-top:12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.12);
-      border-radius: 14px;
-      padding:12px;
-      display:none;
-    }
-    .emailPreview pre{
-      margin:0;
-      white-space:pre-wrap;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--txt);
-      max-height: 220px;
-      overflow:auto;
-      padding:10px;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.14);
-    }
-    .noteButtons{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap input::placeholder { color: var(--text-muted); }
 
-    /* Bulk import */
-    .bulkWrap{
-      margin:12px 0 0;
-      padding:12px;
-      border-top:1px solid var(--border);
-      background: rgba(0,0,0,.10);
-      display:none;
-    }
-    .bulkHelp{ color: var(--muted); font-size: 12px; margin-bottom:8px; }
-    .bulkTa{
-      width:100%;
-      min-height:140px;
-      resize: vertical;
-      font-family: var(--mono);
-      font-size: 12px;
-      border-radius: 12px;
-      border:1px dashed rgba(255,255,255,.22);
-      background: rgba(0,0,0,.18);
-      color: var(--txt);
-      padding:10px;
-      outline:none;
-    }
+  .search-icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 15px;
+    pointer-events: none;
+  }
 
-    @media (max-width: 980px){
-      .side{ width: 205px; }
-      .split{ flex-direction: column; }
-      .splitLeft,.splitRight{ width:100%; }
-      .splitLeft{ border-right:none; border-bottom:1px solid var(--border); }
-      .gridHeader,.row{ grid-template-columns: 1fr; }
-      .iconBtn{ min-height: 46px; }
-    }
-    @media (max-width: 860px){
-      .side{ position:relative; height:auto; width: 100%; border-right:none; border-bottom:1px solid var(--border); }
-      .shell{ flex-direction:column; }
-      .gridHeader,.row{ grid-template-columns: 1fr; }
-    }
-  </style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.18s;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-ghost {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+  .btn-ghost:hover { border-color: var(--border-light); color: var(--text); background: var(--surface2); }
+
+  .btn-accent {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .btn-accent:hover { background: #00c9ff22; box-shadow: 0 0 12px var(--accent-dim); }
+
+  .btn-green {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .btn-green:hover { background: #00e5aa28; box-shadow: 0 0 12px var(--accent2-dim); }
+
+  .btn-warn {
+    background: #ff6b3512;
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+  .btn-warn:hover { background: #ff6b3520; }
+
+  .btn-sm {
+    padding: 6px 11px;
+    font-size: 11px;
+  }
+
+  /* Main layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* Panel */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .badge {
+    background: var(--surface3);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* Patient add area */
+  .add-area {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .add-area textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+  }
+
+  .add-area textarea:focus { border-color: var(--accent); }
+  .add-area textarea::placeholder { color: var(--text-muted); }
+
+  .add-area-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  /* Patient list */
+  .patient-list {
+    max-height: 520px;
+    overflow-y: auto;
+  }
+
+  .patient-list::-webkit-scrollbar { width: 4px; }
+  .patient-list::-webkit-scrollbar-track { background: transparent; }
+  .patient-list::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+  .patient-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .patient-item:last-child { border-bottom: none; }
+  .patient-item:hover { background: var(--surface2); }
+  .patient-item.active { background: var(--surface3); border-left: 2px solid var(--accent); padding-left: 14px; }
+
+  .patient-status {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+
+  .patient-item.has-note .patient-status {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .patient-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .patient-item.has-note .patient-name { color: #fff; }
+
+  .patient-del {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .patient-item:hover .patient-del { opacity: 1; }
+  .patient-del:hover { color: var(--warn); background: #ff6b3512; }
+
+  .empty-state {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  /* Note editor */
+  .note-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .note-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .note-patient-name {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    flex: 1;
+  }
+
+  .note-body {
+    padding: 18px;
+  }
+
+  .note-body textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+    resize: vertical;
+    min-height: 320px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .note-body textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+  .note-body textarea::placeholder { color: var(--text-muted); }
+
+  .note-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px 16px;
+  }
+
+  .note-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .no-patient {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 360px;
+    gap: 12px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .no-patient-icon { font-size: 40px; opacity: 0.3; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 720px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 20px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: color 0.15s;
+  }
+
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .modal-body::-webkit-scrollbar { width: 4px; }
+  .modal-body::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+  .export-text {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .export-text::-webkit-scrollbar { width: 4px; }
+  .export-text::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+  .modal-footer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    justify-content: flex-end;
+  }
+
+  .copy-success {
+    display: none;
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 12px;
+    align-items: center;
+    gap: 6px;
+    margin-right: auto;
+  }
+
+  .copy-success.show { display: flex; }
+
+  /* JSON modal */
+  .json-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .file-drop {
+    border: 2px dashed var(--border-light);
+    border-radius: 10px;
+    padding: 28px;
+    text-align: center;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 2;
+  }
+
+  .file-drop:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .stat-num {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .stat.green .stat-num { color: var(--green); }
+  .stat.accent .stat-num { color: var(--accent); }
+
+  /* Divider in export */
+  .export-divider {
+    border-top: 1px solid var(--border);
+    margin: 8px 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
 </head>
 <body>
-  <div class="shell">
-    <aside class="side">
-      <div class="brand">
-        <div class="t">Hasta Paneli</div>
-        <div class="s">TAKİP ↔ UZMAN (hasta listesi ortak)</div>
-      </div>
-      <nav class="nav">
-        <button class="navBtn" id="navTakip">TAKİP</button>
-        <button class="navBtn" id="navUzman">UZMAN</button>
-      </nav>
-      <div class="sideSmall">
-        Veriler tarayıcıda saklanır (localStorage).<br>
-        Aynı tarayıcıda kalıcıdır.
-      </div>
-    </aside>
 
-    <main class="main">
-      <!-- TAKİP VIEW -->
-      <section class="app" id="viewTakip">
-        <header>
-          <div class="title">
-            <h1>TAKİP</h1>
-            <div class="sub">Seans bazlı hasta listesi (kalıcı) + seans notları (değişir)</div>
-          </div>
-        </header>
-
-        <div class="tabs" id="takipTabs"></div>
-
-        <div class="panel">
-          <div class="toolbar">
-            <div class="leftTools">
-              <div class="field" title="Hasta ekle (aktif seansa) — eklediğin hasta UZMAN'a da yansır">
-                <input class="nameIn" id="takipPatientInput" type="text" placeholder="Hasta adı" />
-              </div>
-              <div class="field" title="Koltuk No: 1, 5K, 11K, 2/7 vb.">
-                <input class="seatIn" id="takipSeatInput" type="text" placeholder="Koltuk No" />
-              </div>
-              <button class="btn primary" id="takipAddBtn">Ekle</button>
-              <button class="btn" id="takipSortBySeatBtn">Koltuk No'ya Göre Sırala</button>
-              <button class="btn" id="takipBulkBtn">Toplu Ekle</button>
-            </div>
-
-            <div class="rightTools">
-              <button class="btn" id="takipUndoBtn">Geri Al (Ctrl+Z)</button>
-              <button class="btn" id="takipRedoBtn">İleri Al (Ctrl+Y)</button>
-              <button class="btn danger" id="takipResetNotesBtn" title="Aktif seansın sadece TAKİP açıklamalarını siler, hasta isimleri kalır">
-                Açıklamaları Sıfırla (Bu seans)
-              </button>
-              <button class="btn" id="takipResetAllNotesBtn" title="Tüm seansların TAKİP açıklamalarını siler, hasta isimleri kalır">
-                Açıklamaları Sıfırla (Tüm seanslar)
-              </button>
-            </div>
-          </div>
-
-          <div class="gridHeader">
-            <div>Koltuk</div>
-            <div>Hasta</div>
-            <div>Açıklama / Not (TAKİP)</div>
-            <div style="text-align:center">Sil</div>
-          </div>
-
-          <div class="rows" id="takipRows"></div>
-          <div class="empty" id="takipEmpty" style="display:none;">Bu seansta henüz hasta yok. Üstten isim ekleyebilirsin.</div>
-
-          <div class="bulkWrap" id="takipBulkWrap">
-            <div class="bulkHelp">
-              Her satır: <b>KOLTUK_NO İSİM</b> (ör: <code>5K AYHAN CEZVECİ</code>)<br>
-              İstersen <b>KOLTUK_NO</b> yerine <b>NO</b> da yazabilirsin (1,2,3...). En baştaki parça koltuk olarak alınır.
-            </div>
-            <textarea class="bulkTa" id="takipBulkTa" placeholder="5K AYHAN CEZVECİ&#10;6K ŞÜKRÜ SÖNMEZ&#10;11K AYHAN ADAK"></textarea>
-            <div class="noteButtons">
-              <button class="btn primary" id="takipBulkApplyBtn">Bu Seansa Ekle</button>
-              <button class="btn" id="takipBulkCloseBtn">Kapat</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- UZMAN VIEW -->
-      <section class="app" id="viewUzman" style="display:none;">
-        <header>
-          <div class="title">
-            <h1>UZMAN</h1>
-            <div class="sub">Aynı seans-hasta listesi; uzman notları ayrı tutulur</div>
-          </div>
-        </header>
-
-        <div class="tabs" id="uzmanTabs"></div>
-
-        <div class="panel">
-          <div class="toolbar">
-            <div class="leftTools">
-              <div class="field" title="Hasta ekle (aktif seansa) — eklediğin hasta TAKİP'e de yansır">
-                <input class="nameIn" id="uzmanPatientInput" type="text" placeholder="Hasta adı" />
-              </div>
-              <div class="field" title="Koltuk No: 1, 5K, 11K, 2/7 vb.">
-                <input class="seatIn" id="uzmanSeatInput" type="text" placeholder="Koltuk No" />
-              </div>
-              <button class="btn primary" id="uzmanAddBtn">Ekle</button>
-              <button class="btn" id="uzmanSortBySeatBtn">Koltuk No'ya Göre Sırala</button>
-            </div>
-
-            <div class="rightTools">
-              <button class="btn" id="uzmanUndoBtn">Geri Al (Ctrl+Z)</button>
-              <button class="btn" id="uzmanRedoBtn">İleri Al (Ctrl+Y)</button>
-              <button class="btn danger" id="uzmanResetNotesBtn" title="Aktif seansın sadece UZMAN açıklamalarını siler, hasta isimleri kalır">
-                Açıklamaları Sıfırla (Bu seans)
-              </button>
-              <button class="btn" id="uzmanResetAllNotesBtn" title="Tüm seansların UZMAN açıklamalarını siler, hasta isimleri kalır">
-                Açıklamaları Sıfırla (Tüm seanslar)
-              </button>
-              <button class="btn success" id="uzmanEmailBtn" title="UZMAN notlarını liste halinde çıkarır">
-                Notları Çıkar (E-posta metni)
-              </button>
-              <button class="btn" id="exportJsonBtn" title="Tüm verileri JSON olarak indirir">
-                JSON Dışa Aktar
-              </button>
-              <label class="btn" for="importJsonInput" title="JSON dosyasından içe aktarır (mevcut verilerin üstüne yazar)">
-                JSON İçe Aktar
-              </label>
-              <input id="importJsonInput" type="file" accept=".json,application/json" style="display:none" />
-            </div>
-          </div>
-
-          <div class="split">
-            <div class="splitLeft">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
-                <div style="font-weight:700;">Hastalar</div>
-                <div class="pill">Tıkla: seç</div>
-              </div>
-              <div id="uzmanList"></div>
-              <div class="empty" id="uzmanListEmpty" style="display:none;">Bu seansta henüz hasta yok.</div>
-            </div>
-
-            <div class="splitRight">
-              <div class="uzmanMeta">
-                <span class="pill" id="uzmanSessionPill">Seans</span>
-                <span class="pill" id="uzmanSelectedPill">Seçili hasta: —</span>
-              </div>
-
-              <label style="display:block;color:var(--muted);font-size:12px;margin:10px 0 6px;">Seçili Hasta</label>
-              <input class="readonly" id="uzmanSelectedName" readonly placeholder="Soldan hasta seç..." />
-
-              <label style="display:block;color:var(--muted);font-size:12px;margin:10px 0 6px;">Koltuk No</label>
-              <input class="readonly" id="uzmanSelectedSeat" readonly placeholder="—" />
-
-              <label style="display:block;color:var(--muted);font-size:12px;margin:10px 0 6px;">Hasta Açıklaması/Notu (UZMAN)</label>
-              <textarea id="uzmanNote" placeholder="Bu hasta için uzman notu..."></textarea>
-
-              <div class="noteButtons">
-                <button class="btn primary" id="uzmanSaveBtn">Notu Kaydet</button>
-                <button class="btn" id="uzmanClearCurrentBtn">Bu Notu Temizle</button>
-              </div>
-
-              <div class="emailPreview" id="uzmanEmailPreview">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
-                  <div style="font-weight:700;">E-posta Metni</div>
-                  <div class="pill">kopyala / mailto</div>
-                </div>
-                <pre id="uzmanEmailText"></pre>
-                <div class="noteButtons">
-                  <button class="btn primary" id="uzmanCopyEmailBtn">Metni Kopyala</button>
-                  <button class="btn success" id="uzmanOpenMailBtn">Mail Uygulamasını Aç</button>
-                  <button class="btn" id="uzmanCloseEmailBtn">Kapat</button>
-                </div>
-              </div>
-
-              <div class="empty" id="uzmanEmptyNote">Soldan bir hasta seçip not yazabilirsin.</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div style="max-width:1200px;margin:10px auto 0;color:rgba(255,255,255,.55);font-size:12px;font-family:var(--mono);">
-        İpucu: TAKİP'te <b>hasta adına</b> tıklayarak ismi düzenleyebilirsin (her iki tarafta da güncellenir).<br>
-        TAKİP'te <b>koltuk</b> etiketine tıklayarak koltuk numarasını düzenleyebilirsin.
-      </div>
-    </main>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">🩺</div>
+    <div class="header-text">
+      <h1>Diyaliz Hasta Gözlem Sistemi</h1>
+      <p>Uzman Doktor Gözlem Notu Yönetimi</p>
+    </div>
+    <div class="header-date" id="headerDate"></div>
   </div>
 
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Hasta ara..." oninput="filterPatients()">
+    </div>
+    <button class="btn btn-green" onclick="openExportModal()">📋 Notları Toplu Görüntüle</button>
+    <button class="btn btn-ghost" onclick="openJsonModal()">📦 JSON Aktarım</button>
+    <button class="btn btn-warn" onclick="confirmClearAll()">🗑 Notları Sıfırla</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat accent">
+      <span>Toplam Hasta</span>
+      <span class="stat-num" id="statTotal">0</span>
+    </div>
+    <div class="stat green">
+      <span>Not Girildi</span>
+      <span class="stat-num" id="statNoted">0</span>
+    </div>
+    <div class="stat">
+      <span>Not Bekliyor</span>
+      <span class="stat-num" id="statPending">0</span>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="layout">
+    <!-- Left: Patient List -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Hasta Listesi</span>
+          <span class="badge" id="patientCount">0 hasta</span>
+        </div>
+
+        <div class="add-area">
+          <textarea id="pasteArea" placeholder="Hasta isimlerini buraya yapıştırın (her satıra bir isim)..."></textarea>
+          <div class="add-area-footer">
+            <button class="btn btn-accent btn-sm" onclick="addPatients()">＋ Hastaları Ekle</button>
+          </div>
+        </div>
+
+        <div class="patient-list" id="patientList">
+          <div class="empty-state">Henüz hasta eklenmedi.<br>Yukarıdan hasta ismi yapıştırın.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Note Editor -->
+    <div class="panel note-panel" id="notePanel">
+      <div class="no-patient" id="noPatientMsg">
+        <span class="no-patient-icon">📝</span>
+        <span>Sol taraftan bir hasta seçin</span>
+      </div>
+      <div id="noteEditor" style="display:none; flex-direction:column;">
+        <div class="note-header">
+          <span class="note-patient-name" id="notePatientName"></span>
+          <span class="badge" id="noteTimeBadge"></span>
+        </div>
+        <div class="note-body">
+          <textarea id="noteTextarea" placeholder="Gözlem notunu buraya yazın...
+• Şikayetler ve semptomlar
+• Tanı ve değerlendirme
+• Tedavi planı ve öneriler
+• Takip notları" oninput="saveNote()"></textarea>
+        </div>
+        <div class="note-footer">
+          <span class="note-meta" id="noteMeta">Otomatik kaydediliyor...</span>
+          <button class="btn btn-warn btn-sm" onclick="clearCurrentNote()">Notu Temizle</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📋 Toplu Gözlem Notları</span>
+      <button class="modal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="export-text" id="exportContent"></div>
+    </div>
+    <div class="modal-footer">
+      <span class="copy-success" id="copySuccess">✓ Panoya kopyalandı!</span>
+      <button class="btn btn-ghost" onclick="closeExportModal()">Kapat</button>
+      <button class="btn btn-accent" onclick="sendAllByEmail()">✉️ Mail ile Gönder</button>
+      <button class="btn btn-green" onclick="copyAll()">📋 Tümünü Kopyala</button>
+    </div>
+  </div>
+</div>
+
+<!-- JSON Modal -->
+<div class="modal-overlay" id="jsonModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📦 JSON Aktarım</span>
+      <button class="modal-close" onclick="closeJsonModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="json-modal-body">
+        <div>
+          <p style="font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-bottom: 10px;">DIŞA AKTAR</p>
+          <button class="btn btn-accent" onclick="exportJSON()" style="width:100%; justify-content:center;">⬇ Tüm verileri JSON olarak indir</button>
+        </div>
+        <div style="border-top: 1px solid var(--border); padding-top: 16px;">
+          <p style="font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-bottom: 10px;">İÇE AKTAR</p>
+          <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()"
+               ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'"
+               ondragleave="this.style.borderColor=''"
+               ondrop="handleFileDrop(event)">
+            📂 JSON dosyası seçin veya sürükleyip bırakın<br>
+            <span style="font-size:11px; opacity:0.6;">(Mevcut veriler üzerine yazılacak)</span>
+          </div>
+          <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importJSON(event)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeJsonModal()">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-/* =========================================================
-   ORTAK DATA MODELİ (hasta listesi ortak, koltuk no ortak; notlar ayrı)
-   ========================================================= */
-const SESSIONS = [
-  { id: "pzt_sabah", label: "PAZARTESİ SABAH" },
-  { id: "pzt_ogle",  label: "PAZARTESİ ÖĞLE"  },
-  { id: "sali_sabah",label: "SALI SABAH"     },
-  { id: "sali_ogle", label: "SALI ÖĞLE"      },
-];
+  // ─── State ───────────────────────────────────────────────────────────────
+  let patients = [];
+  let notes = {};
+  let activePatient = null;
+  let saveTimer = null;
+  const STORAGE_PATIENTS = 'dialysis_patients';
+  const STORAGE_NOTES = 'dialysis_notes';
 
-// Storage keys (v2)
-const KEY_SHARED_PATIENTS = "hasta_shared_patients_v2";     // { sessions: {sessionId: [{id,name,seat}]} }
-const KEY_TAKIP_NOTES     = "hasta_takip_notes_v2";         // { [sessionId]: { [patientId]: note } }
-const KEY_UZMAN_NOTES     = "hasta_uzman_notes_v2";         // { [sessionId]: { [patientId]: note } }
-const KEY_ACTIVE_MAIN     = "hasta_active_main_v1";         // "takip" | "uzman"
-const KEY_ACTIVE_TAKIP    = "hasta_active_takip_session_v1";
-const KEY_ACTIVE_UZMAN    = "hasta_active_uzman_session_v1";
-
-// Migration from earlier versions (if user already had data)
-const LEGACY_SHARED_V1 = "hasta_shared_patients_v1"; // old without seat
-const LEGACY_TAKIP_V2  = "hasta_takip_notes_v2";
-const LEGACY_UZMAN_V1  = "hasta_uzman_notes_v1";
-
-// Geri Al/İleri Al (Undo/Redo) için değişkenler
-let history = [];
-let currentHistoryIndex = -1;
-const MAX_HISTORY = 50;
-
-function cleanName(v){ return (v || "").trim().replace(/\s+/g, " "); }
-function cleanSeat(v){ return (v || "").trim().replace(/\s+/g, " "); }
-function cryptoRandomId(){
-  if(window.crypto?.getRandomValues){
-    const a = new Uint32Array(2);
-    crypto.getRandomValues(a);
-    return a[0].toString(16) + a[1].toString(16);
-  }
-  return Math.random().toString(16).slice(2) + Date.now().toString(16);
-}
-function loadJson(key, fallback){
-  try{
-    const raw = localStorage.getItem(key);
-    if(!raw) return fallback;
-    return JSON.parse(raw);
-  }catch(e){ return fallback; }
-}
-function saveJson(key, data){ localStorage.setItem(key, JSON.stringify(data)); }
-
-function emptyShared(){
-  return { sessions: Object.fromEntries(SESSIONS.map(s => [s.id, []])) };
-}
-function normalizeShared(shared){
-  shared.sessions = shared.sessions || {};
-  for(const s of SESSIONS){
-    if(!Array.isArray(shared.sessions[s.id])) shared.sessions[s.id] = [];
-    // ensure seat field exists
-    shared.sessions[s.id] = shared.sessions[s.id].map(p => ({ id:p.id, name:p.name, seat: p.seat || "" }));
-  }
-  return shared;
-}
-function loadShared(){
-  // Prefer v2
-  let s = loadJson(KEY_SHARED_PATIENTS, null);
-  if(s) return normalizeShared(s);
-
-  // Migrate from v1 if exists
-  const v1 = loadJson(LEGACY_SHARED_V1, null);
-  if(v1 && v1.sessions){
-    const migrated = emptyShared();
-    for(const sess of SESSIONS){
-      const arr = Array.isArray(v1.sessions[sess.id]) ? v1.sessions[sess.id] : [];
-      migrated.sessions[sess.id] = arr.map(p => ({ id: p.id, name: p.name, seat: "" }));
-    }
-    saveJson(KEY_SHARED_PATIENTS, migrated);
-    return normalizeShared(migrated);
+  // ─── Init ─────────────────────────────────────────────────────────────────
+  function init() {
+    patients = JSON.parse(localStorage.getItem(STORAGE_PATIENTS) || '[]');
+    notes = JSON.parse(localStorage.getItem(STORAGE_NOTES) || '{}');
+    renderPatients();
+    updateDate();
   }
 
-  const fresh = emptyShared();
-  saveJson(KEY_SHARED_PATIENTS, fresh);
-  return normalizeShared(fresh);
-}
-function saveShared(shared){ saveJson(KEY_SHARED_PATIENTS, normalizeShared(shared)); }
-
-function loadNotes(key, fallbackKey=null){
-  const base = loadJson(key, null);
-  if(base) return normalizeNotes(base);
-  if(fallbackKey){
-    const old = loadJson(fallbackKey, null);
-    if(old){
-      saveJson(key, old);
-      return normalizeNotes(old);
-    }
+  function updateDate() {
+    const now = new Date();
+    document.getElementById('headerDate').innerHTML =
+      now.toLocaleDateString('tr-TR', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) +
+      '<br>' + now.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
   }
-  const n = {};
-  for(const s of SESSIONS) n[s.id] = {};
-  saveJson(key, n);
-  return n;
-}
-function normalizeNotes(n){
-  for(const s of SESSIONS){
-    if(typeof n[s.id] !== "object" || n[s.id] === null) n[s.id] = {};
-  }
-  return n;
-}
-function saveNotes(key, notes){ saveJson(key, normalizeNotes(notes)); }
 
-/* Shared patient ops */
-function ensurePatientInSession(shared, sessionId, name, seat){
-  const list = shared.sessions[sessionId] || [];
-  const exists = list.some(x => x.name.toLowerCase() === name.toLowerCase());
-  if(exists) return { ok:false, reason:"exists" };
-  const obj = { id: cryptoRandomId(), name, seat: seat || "" };
-  list.push(obj);
-  shared.sessions[sessionId] = list;
-  return { ok:true, patient: obj };
-}
-function deletePatientFromSession(shared, sessionId, patientId){
-  const list = shared.sessions[sessionId] || [];
-  shared.sessions[sessionId] = list.filter(x => x.id !== patientId);
-}
-function renamePatientInSession(shared, sessionId, patientId, newName){
-  const list = shared.sessions[sessionId] || [];
-  const p = list.find(x => x.id === patientId);
-  if(p) p.name = newName;
-}
-function updateSeatInSession(shared, sessionId, patientId, newSeat){
-  const list = shared.sessions[sessionId] || [];
-  const p = list.find(x => x.id === patientId);
-  if(p) p.seat = newSeat;
-}
-function sessionLabel(sessionId){
-  const s = SESSIONS.find(x=>x.id===sessionId);
-  return s ? s.label : sessionId;
-}
+  setInterval(updateDate, 60000);
 
-/* =========================================================
-   GERİ AL/İLERİ AL (UNDO/REDO) SİSTEMİ
-   ========================================================= */
-function saveStateToHistory() {
-  // Mevcut timer'ları temizle
-  clearTimeout(takipSaveTimer);
-  clearTimeout(uzmanSaveTimer);
-  
-  // Notları kaydet
-  saveNotes(KEY_TAKIP_NOTES, takipNotes);
-  saveNotes(KEY_UZMAN_NOTES, uzmanNotes);
-  
-  // Geçerli durumu al
-  const state = {
-    shared: loadShared(),
-    takipNotes: loadNotes(KEY_TAKIP_NOTES),
-    uzmanNotes: loadNotes(KEY_UZMAN_NOTES),
-  };
-  
-  // Geçmişte ileri bir noktadaysak, o noktadan sonrasını temizle
-  if (currentHistoryIndex < history.length - 1) {
-    history = history.slice(0, currentHistoryIndex + 1);
-  }
-  
-  // Yeni durumu ekle
-  history.push(JSON.parse(JSON.stringify(state))); // Deep clone
-  currentHistoryIndex++;
-  
-  // Geçmiş boyutunu sınırla
-  if (history.length > MAX_HISTORY) {
-    history.shift();
-    currentHistoryIndex--;
-  }
-}
+  // ─── Patients ─────────────────────────────────────────────────────────────
+  function addPatients() {
+    const raw = document.getElementById('pasteArea').value.trim();
+    if (!raw) return;
 
-function undo() {
-  if (currentHistoryIndex <= 0) {
-    alert("Geri alınacak durum yok.");
-    return;
-  }
-  currentHistoryIndex--;
-  loadStateFromHistory();
-}
+    const names = raw.split('\n')
+      .map(n => n.trim())
+      .filter(n => n.length > 0);
 
-function redo() {
-  if (currentHistoryIndex >= history.length - 1) {
-    alert("İleri alınacak durum yok.");
-    return;
-  }
-  currentHistoryIndex++;
-  loadStateFromHistory();
-}
-
-function loadStateFromHistory() {
-  const state = history[currentHistoryIndex];
-  
-  // Durumu yükle
-  saveShared(state.shared);
-  saveNotes(KEY_TAKIP_NOTES, state.takipNotes);
-  saveNotes(KEY_UZMAN_NOTES, state.uzmanNotes);
-  
-  // Local değişkenleri güncelle
-  shared = loadShared();
-  takipNotes = loadNotes(KEY_TAKIP_NOTES);
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-  
-  // UI'ı güncelle
-  renderTakipRows();
-  renderUzmanList();
-  renderUzmanRight();
-}
-
-/* =========================================================
-   KOLTUK NO'YA GÖRE SIRALAMA
-   ========================================================= */
-function naturalSort(a, b) {
-  const seatA = a.seat || "";
-  const seatB = b.seat || "";
-  
-  // Boş koltuk numaraları en sona
-  if (seatA === "" && seatB !== "") return 1;
-  if (seatB === "" && seatA !== "") return -1;
-  if (seatA === "" && seatB === "") return 0;
-  
-  // Doğal sıralama için parçalara ayır
-  const partsA = seatA.match(/\d+|\D+/g) || [];
-  const partsB = seatB.match(/\d+|\D+/g) || [];
-  
-  const len = Math.min(partsA.length, partsB.length);
-  for (let i = 0; i < len; i++) {
-    const partA = partsA[i];
-    const partB = partsB[i];
-    if (/\d+/.test(partA) && /\d+/.test(partB)) {
-      const numA = parseInt(partA, 10);
-      const numB = parseInt(partB, 10);
-      if (numA !== numB) return numA - numB;
-    } else {
-      const cmp = partA.localeCompare(partB);
-      if (cmp !== 0) return cmp;
-    }
-  }
-  return partsA.length - partsB.length;
-}
-
-/* =========================================================
-   LOAD STATE
-   ========================================================= */
-let shared = loadShared();
-let takipNotes = loadNotes(KEY_TAKIP_NOTES, LEGACY_TAKIP_V2);
-let uzmanNotes = loadNotes(KEY_UZMAN_NOTES, LEGACY_UZMAN_V1);
-
-let activeMain = localStorage.getItem(KEY_ACTIVE_MAIN) || "takip";
-let takipActiveSession = localStorage.getItem(KEY_ACTIVE_TAKIP) || SESSIONS[0].id;
-let uzmanActiveSession = localStorage.getItem(KEY_ACTIVE_UZMAN) || SESSIONS[0].id;
-let uzmanSelectedId = null;
-
-/* =========================================================
-   MAIN NAV (solda TAKİP)
-   ========================================================= */
-const navTakip = document.getElementById("navTakip");
-const navUzman = document.getElementById("navUzman");
-const viewTakip = document.getElementById("viewTakip");
-const viewUzman = document.getElementById("viewUzman");
-
-function setMain(which){
-  activeMain = which;
-  localStorage.setItem(KEY_ACTIVE_MAIN, which);
-  navTakip.classList.toggle("active", which === "takip");
-  navUzman.classList.toggle("active", which === "uzman");
-  viewTakip.style.display = (which === "takip") ? "" : "none";
-  viewUzman.style.display = (which === "uzman") ? "" : "none";
-  // refresh both (keep in sync)
-  renderTakipTabs(); renderTakipRows();
-  renderUzmanTabs(); renderUzmanList(); renderUzmanRight();
-}
-navTakip.addEventListener("click", ()=>setMain("takip"));
-navUzman.addEventListener("click", ()=>setMain("uzman"));
-
-/* =========================================================
-   TAKİP
-   ========================================================= */
-const takipTabsEl = document.getElementById("takipTabs");
-const takipRowsEl = document.getElementById("takipRows");
-const takipEmptyEl = document.getElementById("takipEmpty");
-const takipNameEl = document.getElementById("takipPatientInput");
-const takipSeatEl = document.getElementById("takipSeatInput");
-const takipAddBtn = document.getElementById("takipAddBtn");
-const takipSortBySeatBtn = document.getElementById("takipSortBySeatBtn");
-const takipResetNotesBtn = document.getElementById("takipResetNotesBtn");
-const takipResetAllNotesBtn = document.getElementById("takipResetAllNotesBtn");
-const takipBulkBtn = document.getElementById("takipBulkBtn");
-const takipBulkWrap = document.getElementById("takipBulkWrap");
-const takipBulkTa = document.getElementById("takipBulkTa");
-const takipBulkApplyBtn = document.getElementById("takipBulkApplyBtn");
-const takipBulkCloseBtn = document.getElementById("takipBulkCloseBtn");
-const takipUndoBtn = document.getElementById("takipUndoBtn");
-const takipRedoBtn = document.getElementById("takipRedoBtn");
-
-function renderTakipTabs(){
-  takipTabsEl.innerHTML = "";
-  for(const s of SESSIONS){
-    const b = document.createElement("button");
-    b.className = "tab" + (s.id === takipActiveSession ? " active" : "");
-    b.textContent = s.label;
-    b.addEventListener("click", () => {
-      takipActiveSession = s.id;
-      localStorage.setItem(KEY_ACTIVE_TAKIP, takipActiveSession);
-      renderTakipTabs();
-      renderTakipRows();
-    });
-    takipTabsEl.appendChild(b);
-  }
-}
-let takipSaveTimer = null;
-function takipSaveNotesDebounced(){
-  clearTimeout(takipSaveTimer);
-  takipSaveTimer = setTimeout(()=>saveNotes(KEY_TAKIP_NOTES, takipNotes), 220);
-}
-
-function renderTakipRows(){
-  shared = loadShared();
-  takipNotes = loadNotes(KEY_TAKIP_NOTES);
-
-  takipRowsEl.innerHTML = "";
-  const list = shared.sessions[takipActiveSession] || [];
-  takipEmptyEl.style.display = list.length ? "none" : "block";
-
-  list.forEach((p) => {
-    const row = document.createElement("div");
-    row.className = "row";
-
-    // Seat cell
-    const seatCell = document.createElement("div");
-    seatCell.className = "seatCell";
-    const seatBadge = document.createElement("div");
-    seatBadge.className = "seatBadge";
-    seatBadge.textContent = (p.seat && p.seat.trim()) ? p.seat : "—";
-    seatBadge.title = "Koltuk numarasını düzenle";
-    seatBadge.addEventListener("click", ()=>{
-      const next = prompt("Koltuk No düzenle (örn: 5K, 11K, 2/7):", p.seat || "");
-      if(next === null) return;
-      const cleaned = cleanSeat(next);
-      updateSeatInSession(shared, takipActiveSession, p.id, cleaned);
-      saveShared(shared);
-      saveStateToHistory();
-      renderTakipRows();
-      renderUzmanList();
-      renderUzmanRight();
-    });
-    const seatHint = document.createElement("div");
-    seatHint.className = "seatHint";
-    seatHint.textContent = "tıkla: düzenle";
-    seatCell.appendChild(seatBadge);
-    seatCell.appendChild(seatHint);
-
-    // Name cell
-    const nameCell = document.createElement("div");
-    nameCell.className = "nameCell";
-    const nameTop = document.createElement("div");
-    nameTop.className = "nameTop";
-    const name = document.createElement("div");
-    name.className = "name";
-    name.textContent = p.name;
-    name.title = "Hasta adını düzenle";
-
-    name.addEventListener("click", () => {
-      const next = prompt("Hasta adını düzenle:", p.name);
-      if(next === null) return;
-      const cleaned = cleanName(next);
-      if(!cleaned){ alert("İsim boş olamaz."); return; }
-
-      const listNow = shared.sessions[takipActiveSession] || [];
-      const exists = listNow.some(x => x.id !== p.id && x.name.toLowerCase() === cleaned.toLowerCase());
-      if(exists){ alert("Bu isim zaten var."); return; }
-
-      renamePatientInSession(shared, takipActiveSession, p.id, cleaned);
-      saveShared(shared);
-      saveStateToHistory();
-      renderTakipRows();
-      renderUzmanList();
-      renderUzmanRight();
-    });
-
-    const hint = document.createElement("div");
-    hint.className = "hint";
-    hint.textContent = "İsme tıkla: düzenle";
-
-    nameTop.appendChild(name);
-    nameCell.appendChild(nameTop);
-    nameCell.appendChild(hint);
-
-    // Note cell
-    const noteWrap = document.createElement("div");
-    const ta = document.createElement("textarea");
-    ta.placeholder = "Not gir... (TAKİP)";
-    ta.value = (takipNotes[takipActiveSession] && takipNotes[takipActiveSession][p.id]) ? takipNotes[takipActiveSession][p.id] : "";
-    ta.addEventListener("input", () => {
-      takipNotes[takipActiveSession][p.id] = ta.value;
-      takipSaveNotesDebounced();
-      saveStateToHistory();
-    });
-    noteWrap.appendChild(ta);
-
-    // Delete button
-    const del = document.createElement("button");
-    del.className = "iconBtn";
-    del.title = "Hastayı sil (bu seanstan) — UZMAN'dan da kalkar";
-    del.innerHTML = `
-      <svg class="trash" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 3h6l1 2h5v2H3V5h5l1-2zm1 7h2v9h-2v-9zm4 0h2v9h-2v-9zM6 10h2v9H6v-9zm1-1h10l-1 12H8L7 9z"/>
-      </svg>
-    `;
-    del.addEventListener("click", () => {
-      const ok = confirm(`"${p.name}" bu seanstan silinsin mi?`);
-      if(!ok) return;
-
-      deletePatientFromSession(shared, takipActiveSession, p.id);
-      saveShared(shared);
-
-      takipNotes = loadNotes(KEY_TAKIP_NOTES);
-      uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-      delete takipNotes[takipActiveSession][p.id];
-      delete uzmanNotes[takipActiveSession][p.id];
-      saveNotes(KEY_TAKIP_NOTES, takipNotes);
-      saveNotes(KEY_UZMAN_NOTES, uzmanNotes);
-
-      if(uzmanSelectedId === p.id && uzmanActiveSession === takipActiveSession){
-        uzmanSelectedId = null;
+    let added = 0;
+    names.forEach(name => {
+      if (!patients.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+        patients.push({ id: Date.now() + Math.random(), name });
+        added++;
       }
-
-      saveStateToHistory();
-      renderTakipRows();
-      renderUzmanList();
-      renderUzmanRight();
     });
 
-    row.appendChild(seatCell);
-    row.appendChild(nameCell);
-    row.appendChild(noteWrap);
-    row.appendChild(del);
-
-    takipRowsEl.appendChild(row);
-  });
-}
-
-function addPatientToSession(sessionId, name, seat){
-  shared = loadShared();
-  const res = ensurePatientInSession(shared, sessionId, name, seat);
-  if(!res.ok) return res;
-  saveShared(shared);
-  saveStateToHistory();
-  return res;
-}
-
-function handleAddFromTakip(){
-  const name = cleanName(takipNameEl.value);
-  const seat = cleanSeat(takipSeatEl.value);
-  if(!name){ takipNameEl.focus(); return; }
-
-  const res = addPatientToSession(takipActiveSession, name, seat);
-  if(!res.ok){
-    if(res.reason === "exists") alert("Bu isim bu seansta zaten var.");
-    return;
-  }
-  takipNameEl.value = "";
-  takipSeatEl.value = "";
-
-  renderTakipRows();
-  renderUzmanList();
-  renderUzmanRight();
-}
-
-takipAddBtn.addEventListener("click", handleAddFromTakip);
-[takipNameEl, takipSeatEl].forEach(el=>{
-  el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); handleAddFromTakip(); } });
-});
-
-// Koltuk no'ya göre sıralama
-takipSortBySeatBtn.addEventListener("click", () => {
-  shared = loadShared();
-  const list = shared.sessions[takipActiveSession] || [];
-  list.sort(naturalSort);
-  shared.sessions[takipActiveSession] = list;
-  saveShared(shared);
-  saveStateToHistory();
-  renderTakipRows();
-  renderUzmanList();
-  renderUzmanRight();
-});
-
-// Geri al/ileri al
-takipUndoBtn.addEventListener("click", undo);
-takipRedoBtn.addEventListener("click", redo);
-
-takipResetNotesBtn.addEventListener("click", ()=>{
-  const list = (loadShared().sessions[takipActiveSession] || []);
-  if(!list.length) return;
-  const ok = confirm("Bu seanstaki TÜM TAKİP açıklamaları silinsin mi? (Hasta isimleri kalır)");
-  if(!ok) return;
-  takipNotes = loadNotes(KEY_TAKIP_NOTES);
-  takipNotes[takipActiveSession] = {};
-  saveNotes(KEY_TAKIP_NOTES, takipNotes);
-  saveStateToHistory();
-  renderTakipRows();
-});
-takipResetAllNotesBtn.addEventListener("click", ()=>{
-  const ok = confirm("TÜM seansların TAKİP açıklamaları silinsin mi? (Hasta isimleri kalır)");
-  if(!ok) return;
-  takipNotes = loadNotes(KEY_TAKIP_NOTES);
-  for(const s of SESSIONS) takipNotes[s.id] = {};
-  saveNotes(KEY_TAKIP_NOTES, takipNotes);
-  saveStateToHistory();
-  renderTakipRows();
-});
-
-// Bulk import (TAKİP)
-takipBulkBtn.addEventListener("click", ()=>{
-  takipBulkWrap.style.display = (takipBulkWrap.style.display === "block") ? "none" : "block";
-});
-takipBulkCloseBtn.addEventListener("click", ()=>{
-  takipBulkWrap.style.display = "none";
-});
-takipBulkApplyBtn.addEventListener("click", ()=>{
-  const lines = (takipBulkTa.value || "")
-    .split(/\r?\n/)
-    .map(x => x.trim())
-    .filter(Boolean);
-
-  if(!lines.length) return;
-
-  let addedCount = 0;
-
-  for(const line of lines){
-    // Accept: "1 NAME", "5K NAME", "6 K NAME", "11K NAME 2/7", etc.
-    // Capture seat token at the beginning; everything after it is name.
-    const m = line.match(/^(\d+\s*K?|\d+K)\s*(.*)$/i);
-
-    let seat = "";
-    let name = "";
-
-    if(m){
-      seat = cleanSeat(m[1]).replace(/\s+/g,"").toUpperCase(); // "6 K" -> "6K"
-      name = cleanName((m[2] || "").trim());
-    }else{
-      // No seat token; treat entire line as name
-      name = cleanName(line);
+    if (added > 0) {
+      save();
+      renderPatients();
+      showToast(`${added} hasta eklendi`);
     }
 
-    if(!name) continue;
-
-    const res = addPatientToSession(takipActiveSession, name, seat);
-    if(res.ok) addedCount++;
+    document.getElementById('pasteArea').value = '';
   }
 
-  takipBulkTa.value = "";
-  alert(`${addedCount} hasta eklendi.`);
-  renderTakipRows();
-  renderUzmanList();
-  renderUzmanRight();
-});
-
-/* =========================================================
-   UZMAN
-   ========================================================= */
-const uzmanTabsEl = document.getElementById("uzmanTabs");
-const uzmanListEl = document.getElementById("uzmanList");
-const uzmanListEmpty = document.getElementById("uzmanListEmpty");
-const uzmanSessionPill = document.getElementById("uzmanSessionPill");
-const uzmanSelectedPill = document.getElementById("uzmanSelectedPill");
-const uzmanSelectedName = document.getElementById("uzmanSelectedName");
-const uzmanSelectedSeat = document.getElementById("uzmanSelectedSeat");
-const uzmanNote = document.getElementById("uzmanNote");
-const uzmanEmptyNote = document.getElementById("uzmanEmptyNote");
-
-const uzmanNameEl = document.getElementById("uzmanPatientInput");
-const uzmanSeatEl = document.getElementById("uzmanSeatInput");
-const uzmanAddBtn = document.getElementById("uzmanAddBtn");
-const uzmanSortBySeatBtn = document.getElementById("uzmanSortBySeatBtn");
-const uzmanResetNotesBtn = document.getElementById("uzmanResetNotesBtn");
-const uzmanResetAllNotesBtn = document.getElementById("uzmanResetAllNotesBtn");
-const uzmanSaveBtn = document.getElementById("uzmanSaveBtn");
-const uzmanClearCurrentBtn = document.getElementById("uzmanClearCurrentBtn");
-const uzmanUndoBtn = document.getElementById("uzmanUndoBtn");
-const uzmanRedoBtn = document.getElementById("uzmanRedoBtn");
-
-const uzmanEmailBtn = document.getElementById("uzmanEmailBtn");
-const uzmanEmailPreview = document.getElementById("uzmanEmailPreview");
-const uzmanEmailText = document.getElementById("uzmanEmailText");
-const uzmanCopyEmailBtn = document.getElementById("uzmanCopyEmailBtn");
-const uzmanOpenMailBtn = document.getElementById("uzmanOpenMailBtn");
-const uzmanCloseEmailBtn = document.getElementById("uzmanCloseEmailBtn");
-
-const exportJsonBtn = document.getElementById("exportJsonBtn");
-const importJsonInput = document.getElementById("importJsonInput");
-
-function renderUzmanTabs(){
-  uzmanTabsEl.innerHTML = "";
-  for(const s of SESSIONS){
-    const b = document.createElement("button");
-    b.className = "tab" + (s.id === uzmanActiveSession ? " active" : "");
-    b.textContent = s.label;
-    b.addEventListener("click", () => {
-      uzmanActiveSession = s.id;
-      localStorage.setItem(KEY_ACTIVE_UZMAN, uzmanActiveSession);
-      uzmanSelectedId = null;
-      renderUzmanTabs();
-      renderUzmanList();
-      renderUzmanRight();
-      uzmanEmailPreview.style.display = "none";
-    });
-    uzmanTabsEl.appendChild(b);
+  function deletePatient(id, e) {
+    e.stopPropagation();
+    patients = patients.filter(p => p.id !== id);
+    if (activePatient === id) {
+      activePatient = null;
+      showNoteEditor(false);
+    }
+    save();
+    renderPatients();
   }
-}
 
-function renderUzmanList(){
-  shared = loadShared();
-  uzmanListEl.innerHTML = "";
-  const list = shared.sessions[uzmanActiveSession] || [];
-  uzmanListEmpty.style.display = list.length ? "none" : "block";
+  function selectPatient(id) {
+    activePatient = id;
+    const patient = patients.find(p => p.id === id);
+    if (!patient) return;
 
-  list.forEach(p=>{
-    const item = document.createElement("div");
-    item.className = "listItem" + (uzmanSelectedId === p.id ? " active" : "");
+    document.getElementById('notePatientName').textContent = patient.name;
+    document.getElementById('noteTextarea').value = notes[id] || '';
+    updateNoteMeta(id);
+    showNoteEditor(true);
+    renderPatients();
+  }
 
-    const left = document.createElement("div");
-    left.style.display = "flex";
-    left.style.flexDirection = "column";
-    left.style.gap = "4px";
+  function showNoteEditor(show) {
+    document.getElementById('noPatientMsg').style.display = show ? 'none' : 'flex';
+    const ed = document.getElementById('noteEditor');
+    ed.style.display = show ? 'flex' : 'none';
+  }
 
-    const nm = document.createElement("div");
-    nm.style.fontWeight = "700";
-    nm.textContent = p.name;
+  function filterPatients() {
+    renderPatients();
+  }
 
-    const seat = document.createElement("div");
-    seat.className = "pill";
-    seat.textContent = `Koltuk: ${(p.seat && p.seat.trim()) ? p.seat : "—"}`;
+  function renderPatients() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = patients.filter(p => p.name.toLowerCase().includes(query));
 
-    left.appendChild(nm);
-    left.appendChild(seat);
+    const list = document.getElementById('patientList');
 
-    const right = document.createElement("div");
-    right.className = "pill";
-    right.textContent = "seç";
+    if (patients.length === 0) {
+      list.innerHTML = '<div class="empty-state">Henüz hasta eklenmedi.<br>Yukarıdan hasta ismi yapıştırın.</div>';
+      updateStats();
+      return;
+    }
 
-    item.appendChild(left);
-    item.appendChild(right);
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty-state">Aramanızla eşleşen<br>hasta bulunamadı.</div>';
+      updateStats();
+      return;
+    }
 
-    item.addEventListener("click", ()=>{
-      uzmanSelectedId = p.id;
-      renderUzmanList();
-      renderUzmanRight();
+    list.innerHTML = filtered.map(p => {
+      const hasNote = notes[p.id] && notes[p.id].trim().length > 0;
+      const isActive = activePatient === p.id;
+      return `
+        <div class="patient-item ${hasNote ? 'has-note' : ''} ${isActive ? 'active' : ''}"
+             onclick="selectPatient(${JSON.stringify(p.id)})">
+          <div class="patient-status">${hasNote ? '✓' : ''}</div>
+          <span class="patient-name">${escHtml(p.name)}</span>
+          <button class="patient-del" onclick="deletePatient(${JSON.stringify(p.id)}, event)" title="Sil">✕</button>
+        </div>`;
+    }).join('');
+
+    updateStats();
+  }
+
+  function updateStats() {
+    const total = patients.length;
+    const noted = patients.filter(p => notes[p.id] && notes[p.id].trim().length > 0).length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statNoted').textContent = noted;
+    document.getElementById('statPending').textContent = total - noted;
+    document.getElementById('patientCount').textContent = total + ' hasta';
+  }
+
+  // ─── Notes ────────────────────────────────────────────────────────────────
+  function saveNote() {
+    if (!activePatient) return;
+    const val = document.getElementById('noteTextarea').value;
+    notes[activePatient] = val;
+
+    clearTimeout(saveTimer);
+    document.getElementById('noteMeta').textContent = 'Kaydediliyor...';
+    saveTimer = setTimeout(() => {
+      save();
+      renderPatients();
+      updateNoteMeta(activePatient);
+    }, 600);
+  }
+
+  function updateNoteMeta(id) {
+    const val = notes[id] || '';
+    const words = val.trim() ? val.trim().split(/\s+/).length : 0;
+    document.getElementById('noteMeta').textContent =
+      val.trim() ? `${words} kelime · Otomatik kaydedildi` : 'Henüz not girilmedi';
+    document.getElementById('noteTimeBadge').textContent = val.trim() ? '✓ Not var' : 'Not yok';
+    document.getElementById('noteTimeBadge').style.color = val.trim() ? 'var(--green)' : 'var(--text-muted)';
+    document.getElementById('noteTimeBadge').style.borderColor = val.trim() ? 'var(--green)' : '';
+  }
+
+  function clearCurrentNote() {
+    if (!activePatient) return;
+    if (!confirm('Bu hastanın notu silinecek. Emin misiniz?')) return;
+    notes[activePatient] = '';
+    document.getElementById('noteTextarea').value = '';
+    save();
+    renderPatients();
+    updateNoteMeta(activePatient);
+    showToast('Not silindi');
+  }
+
+  function confirmClearAll() {
+    if (!confirm('Tüm hasta notları silinecek. Bu işlem geri alınamaz. Emin misiniz?')) return;
+    notes = {};
+    save();
+    if (activePatient) {
+      document.getElementById('noteTextarea').value = '';
+      updateNoteMeta(activePatient);
+    }
+    renderPatients();
+    showToast('Tüm notlar sıfırlandı');
+  }
+
+  // ─── Export modal ─────────────────────────────────────────────────────────
+  function openExportModal() {
+    const withNotes = patients.filter(p => notes[p.id] && notes[p.id].trim());
+    if (withNotes.length === 0) {
+      showToast('Not girilmiş hasta bulunamadı');
+      return;
+    }
+
+    const today = new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' });
+    let text = `DİYALİZ HASTA GÖZLEM NOTLARI\n${today}\n${'═'.repeat(50)}\n\n`;
+
+    withNotes.forEach((p, i) => {
+      text += `[${i + 1}] ${p.name.toUpperCase()}\n`;
+      text += '─'.repeat(40) + '\n';
+      text += notes[p.id].trim() + '\n\n';
     });
 
-    uzmanListEl.appendChild(item);
-  });
-}
+    text += `${'═'.repeat(50)}\nToplam: ${withNotes.length} hasta`;
 
-let uzmanSaveTimer = null;
-function uzmanSaveNotesDebounced(){
-  clearTimeout(uzmanSaveTimer);
-  uzmanSaveTimer = setTimeout(()=>saveNotes(KEY_UZMAN_NOTES, uzmanNotes), 220);
-}
-
-function renderUzmanRight(){
-  shared = loadShared();
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-
-  uzmanSessionPill.textContent = sessionLabel(uzmanActiveSession);
-
-  const list = shared.sessions[uzmanActiveSession] || [];
-  const patient = list.find(x => x.id === uzmanSelectedId) || null;
-
-  if(!patient){
-    uzmanSelectedPill.textContent = "Seçili hasta: —";
-    uzmanSelectedName.value = "";
-    uzmanSelectedSeat.value = "";
-    uzmanNote.value = "";
-    uzmanNote.disabled = true;
-    uzmanEmptyNote.style.display = "block";
-    return;
+    document.getElementById('exportContent').textContent = text;
+    document.getElementById('copySuccess').classList.remove('show');
+    document.getElementById('exportModal').classList.add('open');
   }
 
-  uzmanEmptyNote.style.display = "none";
-  uzmanNote.disabled = false;
-  uzmanSelectedPill.textContent = `Seçili hasta: ${patient.name}`;
-  uzmanSelectedName.value = patient.name;
-  uzmanSelectedSeat.value = (patient.seat && patient.seat.trim()) ? patient.seat : "—";
-  uzmanNote.value = (uzmanNotes[uzmanActiveSession] && uzmanNotes[uzmanActiveSession][patient.id]) ? uzmanNotes[uzmanActiveSession][patient.id] : "";
-}
-
-function handleAddFromUzman(){
-  const name = cleanName(uzmanNameEl.value);
-  const seat = cleanSeat(uzmanSeatEl.value);
-  if(!name){ uzmanNameEl.focus(); return; }
-
-  const res = addPatientToSession(uzmanActiveSession, name, seat);
-  if(!res.ok){
-    if(res.reason === "exists") alert("Bu isim bu seansta zaten var.");
-    return;
+  function closeExportModal() {
+    document.getElementById('exportModal').classList.remove('open');
   }
-  uzmanNameEl.value = "";
-  uzmanSeatEl.value = "";
 
-  renderUzmanList();
-  renderUzmanRight();
-  renderTakipRows();
-}
-
-uzmanAddBtn.addEventListener("click", handleAddFromUzman);
-[uzmanNameEl, uzmanSeatEl].forEach(el=>{
-  el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); handleAddFromUzman(); } });
-});
-
-// Koltuk no'ya göre sıralama
-uzmanSortBySeatBtn.addEventListener("click", () => {
-  shared = loadShared();
-  const list = shared.sessions[uzmanActiveSession] || [];
-  list.sort(naturalSort);
-  shared.sessions[uzmanActiveSession] = list;
-  saveShared(shared);
-  saveStateToHistory();
-  renderUzmanList();
-  renderUzmanRight();
-  renderTakipRows();
-});
-
-// Geri al/ileri al
-uzmanUndoBtn.addEventListener("click", undo);
-uzmanRedoBtn.addEventListener("click", redo);
-
-uzmanSaveBtn.addEventListener("click", ()=>{
-  if(!uzmanSelectedId){ alert("Lütfen önce bir hasta seçin!"); return; }
-  const note = uzmanNote.value;
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-  uzmanNotes[uzmanActiveSession][uzmanSelectedId] = note;
-  saveNotes(KEY_UZMAN_NOTES, uzmanNotes);
-  saveStateToHistory();
-  alert("Not kaydedildi!");
-});
-
-uzmanNote.addEventListener("input", ()=>{
-  if(!uzmanSelectedId) return;
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-  uzmanNotes[uzmanActiveSession][uzmanSelectedId] = uzmanNote.value;
-  uzmanSaveNotesDebounced();
-  saveStateToHistory();
-});
-
-uzmanClearCurrentBtn.addEventListener("click", ()=>{
-  if(!uzmanSelectedId){ alert("Lütfen önce bir hasta seçin!"); return; }
-  const ok = confirm("Bu hastanın UZMAN notu temizlensin mi?");
-  if(!ok) return;
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-  delete uzmanNotes[uzmanActiveSession][uzmanSelectedId];
-  saveNotes(KEY_UZMAN_NOTES, uzmanNotes);
-  saveStateToHistory();
-  uzmanNote.value = "";
-});
-
-uzmanResetNotesBtn.addEventListener("click", ()=>{
-  const list = (loadShared().sessions[uzmanActiveSession] || []);
-  if(!list.length) return;
-  const ok = confirm("Bu seanstaki TÜM UZMAN açıklamaları silinsin mi? (Hasta isimleri kalır)");
-  if(!ok) return;
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-  uzmanNotes[uzmanActiveSession] = {};
-  saveNotes(KEY_UZMAN_NOTES, uzmanNotes);
-  saveStateToHistory();
-  renderUzmanRight();
-});
-
-uzmanResetAllNotesBtn.addEventListener("click", ()=>{
-  const ok = confirm("TÜM seansların UZMAN açıklamaları silinsin mi? (Hasta isimleri kalır)");
-  if(!ok) return;
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-  for(const s of SESSIONS) uzmanNotes[s.id] = {};
-  saveNotes(KEY_UZMAN_NOTES, uzmanNotes);
-  saveStateToHistory();
-  renderUzmanRight();
-});
-
-function createUzmanEmailText(){
-  shared = loadShared();
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
-  const list = shared.sessions[uzmanActiveSession] || [];
-  if(!list.length){ alert("Bu seansta hiç hasta yok."); return null; }
-
-  let out = `${sessionLabel(uzmanActiveSession)} - UZMAN HASTA NOTLARI\n`;
-  out += "===============================\n\n";
-  list.forEach((p, i)=>{
-    const seat = (p.seat && p.seat.trim()) ? p.seat : "-";
-    const note = (uzmanNotes[uzmanActiveSession] && uzmanNotes[uzmanActiveSession][p.id]) ? uzmanNotes[uzmanActiveSession][p.id] : "Not girilmemiş.";
-    out += `${i+1}) [${seat}] ${p.name}: ${note}\n\n`;
-  });
-  return out;
-}
-
-uzmanEmailBtn.addEventListener("click", ()=>{
-  const txt = createUzmanEmailText();
-  if(!txt) return;
-  uzmanEmailText.textContent = txt;
-  uzmanEmailPreview.style.display = "block";
-  uzmanEmailPreview.scrollIntoView({behavior:"smooth"});
-});
-
-uzmanCopyEmailBtn.addEventListener("click", async ()=>{
-  try{
-    await navigator.clipboard.writeText(uzmanEmailText.textContent || "");
-    alert("Metin panoya kopyalandı!");
-  }catch(e){
-    alert("Kopyalama başarısız. (Tarayıcı izin vermedi)");
+  function copyAll() {
+    const text = document.getElementById('exportContent').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      document.getElementById('copySuccess').classList.add('show');
+      showToast('Panoya kopyalandı!');
+    });
   }
-});
 
-uzmanOpenMailBtn.addEventListener("click", ()=>{
-  const txt = uzmanEmailText.textContent || "";
-  const subject = `${sessionLabel(uzmanActiveSession)} UZMAN Hasta Notları`;
-  const body = encodeURIComponent(txt);
-  window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${body}`);
-});
+  // Toplu görüntülenen notları belirlenen mail adresine gönder
+  function sendAllByEmail() {
+    const text = document.getElementById('exportContent').textContent.trim();
 
-uzmanCloseEmailBtn.addEventListener("click", ()=>{
-  uzmanEmailPreview.style.display = "none";
-});
-
-/* =========================================================
-   JSON EXPORT / IMPORT
-   ========================================================= */
-function buildExportObject(){
-  return {
-    app: "hasta-uzman-takip",
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    sessions: SESSIONS,
-    shared: loadShared(),
-    takipNotes: loadNotes(KEY_TAKIP_NOTES),
-    uzmanNotes: loadNotes(KEY_UZMAN_NOTES),
-    ui: {
-      activeMain,
-      takipActiveSession,
-      uzmanActiveSession,
-    }
-  };
-}
-
-exportJsonBtn.addEventListener("click", ()=>{
-  const obj = buildExportObject();
-  const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
-  const a = document.createElement("a");
-  const ts = new Date().toISOString().replace(/[:.]/g,"-");
-  a.href = URL.createObjectURL(blob);
-  a.download = `hasta_takip_uzman_${ts}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 800);
-});
-
-importJsonInput.addEventListener("change", async (e)=>{
-  const file = e.target.files && e.target.files[0];
-  if(!file) return;
-  try{
-    const txt = await file.text();
-    const obj = JSON.parse(txt);
-
-    // Minimal validation
-    if(!obj || typeof obj !== "object") throw new Error("Geçersiz JSON");
-    if(!obj.shared || !obj.takipNotes || !obj.uzmanNotes) throw new Error("Beklenen alanlar yok");
-
-    const ok = confirm("JSON içe aktarılacak ve mevcut verilerin ÜSTÜNE yazacak. Devam?");
-    if(!ok) return;
-
-    // Save
-    saveShared(obj.shared);
-    saveNotes(KEY_TAKIP_NOTES, obj.takipNotes);
-    saveNotes(KEY_UZMAN_NOTES, obj.uzmanNotes);
-
-    // UI restore (optional)
-    if(obj.ui){
-      if(obj.ui.activeMain) activeMain = obj.ui.activeMain;
-      if(obj.ui.takipActiveSession) takipActiveSession = obj.ui.takipActiveSession;
-      if(obj.ui.uzmanActiveSession) uzmanActiveSession = obj.ui.uzmanActiveSession;
-      localStorage.setItem(KEY_ACTIVE_MAIN, activeMain);
-      localStorage.setItem(KEY_ACTIVE_TAKIP, takipActiveSession);
-      localStorage.setItem(KEY_ACTIVE_UZMAN, uzmanActiveSession);
+    if (!text) {
+      showToast('Gönderilecek not bulunamadı');
+      return;
     }
 
-    // Reset selection
-    uzmanSelectedId = null;
-    
-    // Geçmişi temizle ve yeni durumu ekle
-    history = [];
-    currentHistoryIndex = -1;
-    saveStateToHistory();
+    const recipient = 'kamikazemailim@gmail.com';
+    const subject = 'Diyaliz Hasta Gözlem Notları';
 
-    alert("İçe aktarma tamamlandı!");
-    // Refresh all
-    setMain(activeMain);
-  }catch(err){
-    alert("İçe aktarma başarısız: " + (err && err.message ? err.message : err));
-  }finally{
-    importJsonInput.value = "";
+    const mailtoUrl =
+      'mailto:' + recipient +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(text);
+
+    window.location.href = mailtoUrl;
   }
-});
 
-/* =========================================================
-   KLAVYE KISAYOLLARI
-   ========================================================= */
-document.addEventListener("keydown", (e) => {
-  // Ctrl+Z (veya Cmd+Z) - Geri Al
-  if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+  // ─── JSON modal ───────────────────────────────────────────────────────────
+  function openJsonModal() {
+    document.getElementById('jsonModal').classList.add('open');
+  }
+
+  function closeJsonModal() {
+    document.getElementById('jsonModal').classList.remove('open');
+  }
+
+  function exportJSON() {
+    const data = { patients, notes, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `diyaliz_notlar_${date}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('JSON indirildi');
+  }
+
+  function handleFileDrop(e) {
     e.preventDefault();
-    undo();
+    document.getElementById('fileDrop').style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.json')) loadJsonFile(file);
   }
-  // Ctrl+Y veya Ctrl+Shift+Z - İleri Al
-  if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
-    e.preventDefault();
-    redo();
+
+  function importJSON(e) {
+    const file = e.target.files[0];
+    if (file) loadJsonFile(file);
+    e.target.value = '';
   }
-});
 
-/* =========================================================
-   INIT
-   ========================================================= */
-function init(){
-  // Ensure structures are present
-  shared = loadShared();
-  saveShared(shared);
+  function loadJsonFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.patients || !data.notes) throw new Error('Geçersiz format');
+        if (!confirm(`${data.patients.length} hasta ve notları yüklenecek. Mevcut veriler değişecek. Devam?`)) return;
+        patients = data.patients;
+        notes = data.notes;
+        save();
+        renderPatients();
+        closeJsonModal();
+        showToast('Veriler başarıyla yüklendi');
+      } catch {
+        alert('Geçersiz JSON dosyası.');
+      }
+    };
+    reader.readAsText(file);
+  }
 
-  takipNotes = loadNotes(KEY_TAKIP_NOTES);
-  uzmanNotes = loadNotes(KEY_UZMAN_NOTES);
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  function save() {
+    localStorage.setItem(STORAGE_PATIENTS, JSON.stringify(patients));
+    localStorage.setItem(STORAGE_NOTES, JSON.stringify(notes));
+  }
 
-  // İlk durumu geçmişe kaydet
-  saveStateToHistory();
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 
-  renderTakipTabs();
-  renderTakipRows();
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
 
-  renderUzmanTabs();
-  renderUzmanList();
-  renderUzmanRight();
+  // Close modals on overlay click
+  document.getElementById('exportModal').addEventListener('click', function(e) {
+    if (e.target === this) closeExportModal();
+  });
+  document.getElementById('jsonModal').addEventListener('click', function(e) {
+    if (e.target === this) closeJsonModal();
+  });
 
-  setMain(activeMain);
-}
-window.addEventListener("DOMContentLoaded", init);
+  // Enter key in paste area
+  document.getElementById('pasteArea').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.ctrlKey) addPatients();
+  });
+
+  init();
 </script>
 </body>
 </html>
